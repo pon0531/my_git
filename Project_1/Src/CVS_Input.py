@@ -15,20 +15,26 @@ Created on Wed May  3 21:11:01 2023
 import MySQLdb
 import pandas as pd
 import time
+import os
 
-years = ["108","109","110","111"]
 database_name = "Population"
 basic_file_path = "../Data/opendata"
 data_base_pre_name = "data_population_"
 basic_file_paths = []
 data_base_names = []
 
-for i in range(len(years)):
-    file_path_create = basic_file_path + years[i] + "Y120.csv"
-    basic_file_paths.append(file_path_create)
 
-    data_base_name_create = data_base_pre_name + years[i]
-    data_base_names.append(data_base_name_create)
+dirPath = r'../Data'
+print(os.listdir(dirPath))
+Files = [f for f in os.listdir(dirPath)]
+
+for file_name in Files:
+    if '.csv' in file_name:
+        file_path_create = "../Data/" + file_name
+        basic_file_paths.append(file_path_create)
+
+        file_name = file_name.replace(".csv","")
+        data_base_names.append(file_name)
 
 try:
     # 開啟資料庫連接
@@ -62,7 +68,7 @@ try:
                             port=3306)           # port
     cursor = conn.cursor()
 
-    for i in range(len(years)):
+    for i in range(len(Files)-1): #多一個readme檔
         start_time_ = time.time()
         sql = """CREATE TABLE IF NOT EXISTS {IMG} (statistic_yyy int(4),
                                                   district_code CHAR(20),
@@ -76,9 +82,9 @@ try:
         cursor.execute(sql)
 
         #把cvs匯入data base, 從第1行開始讀，往下讀nrows行
-        #data = pd.read_csv(basic_file_paths[i], header=1,nrows=50, encoding="utf8")
+        data = pd.read_csv(basic_file_paths[i], header=1,nrows=10, encoding="utf8")
         
-        data = pd.read_csv(basic_file_paths[i], header=1, encoding="utf8")
+        #data = pd.read_csv(basic_file_paths[i], header=1, encoding="utf8")
         for j in range(len(data)):
             sql = """INSERT INTO {IMG} (statistic_yyy, district_code, site_id, site_id_sub, village, sex,birthplace,population)
                                    VALUES (%s, %s, %s, %s, %s, %s,%s ,%s)""".format(IMG=data_base_names[i])
