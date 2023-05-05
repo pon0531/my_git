@@ -14,6 +14,7 @@ Created on Wed May  3 21:11:01 2023
 
 import MySQLdb
 import pandas as pd
+import time
 
 years = ["108","109","110","111"]
 database_name = "Population"
@@ -62,6 +63,7 @@ try:
     cursor = conn.cursor()
 
     for i in range(len(years)):
+        start_time_ = time.time()
         sql = """CREATE TABLE IF NOT EXISTS {IMG} (statistic_yyy int(4),
                                                   district_code CHAR(20),
                                                   site_id TEXT(10),
@@ -74,7 +76,7 @@ try:
         cursor.execute(sql)
 
         #把cvs匯入data base, 從第1行開始讀，往下讀nrows行
-        #data = pd.read_csv(basic_file_paths[i], header=1,nrows=10, encoding="utf8")
+        #data = pd.read_csv(basic_file_paths[i], header=1,nrows=50, encoding="utf8")
         
         data = pd.read_csv(basic_file_paths[i], header=1, encoding="utf8")
         for j in range(len(data)):
@@ -84,7 +86,8 @@ try:
             var = (data.iloc[j,0], data.iloc[j,1], data.iloc[j,2][:3], data.iloc[j,2][3:], data.iloc[j,3], data.iloc[j,4],data.iloc[j,5],data.iloc[j,6])
             cursor.execute(sql, var)
             conn.commit()
-
+        end_time_ = time.time()
+        print("Time elapsed for input %s: %.2f seconds" %(data_base_names[i],(end_time_ - start_time_)))
 except Exception as e :
     print("資料庫連接失敗", e)
     
