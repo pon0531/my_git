@@ -67,7 +67,7 @@ try:
     cursor = conn.cursor()
 
     for i in range(len(data_base_table_names)):
-        if 'Wekly_County_Gender_MPXV' == data_base_table_names[i]:
+        if 'Weekly_Age_County_Gender_MPXV' == data_base_table_names[i]:
             start_time_ = time.time()
             #確定病名,發病年份,發病月份,縣市,鄉鎮,性別,是否為境外移入,年齡層,確定病例數
             #disease,year,week,site_id,township,imported,year_range,disease_cnt
