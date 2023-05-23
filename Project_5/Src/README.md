@@ -4,6 +4,6 @@
 * Use MarkerCluster to show the MRT exits on google map
 
 ## Train_station.py
-* Train_station.cvs provides all the train station in Twiwan
-* Use MarkerCluster to show the station on google map
+* Train_station.cvs provides all the train stations in Taiwan
+* Use MarkerCluster to show all the stations on google map
 * Mark different colors for train branch
