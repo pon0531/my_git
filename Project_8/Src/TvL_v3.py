@@ -46,7 +46,10 @@ class Circle:
         self.Point = [[Axis_x,Axis_y]]
         self.Num = ind
     def __repr__(self):
-        return f"<Circle Index:{self.Num} type:{self.Event} Point:{self.Point} >"
+        if self.Num == (LUCKY_BALL_NUM/2-1) and self.Event == 1:
+            return "{"+f"\"No\":{self.Num},\"Event\":{self.Event},\"Point\":{self.Point}"+"}]"
+        else:
+            return "{"+f"\"No\":{self.Num},\"Event\":{self.Event},\"Point\":{self.Point}"+"},"
 
 
 def Generate_T_by_para(nums, mu, sigma):
@@ -56,6 +59,7 @@ def Generate_T_by_para(nums, mu, sigma):
         
     for i in range(1000): 
         nums.append(random.normalvariate(mu, sigma))
+
     return nums
 
 def ran_num(max):
@@ -98,10 +102,6 @@ def Circle_move(period, circle):
          # print(dis)
 
     dis = ((next_x - circle.Point[period-1][0])**2 + (next_y- circle.Point[period-1][1])**2)**(0.5)
-    #print("ddis:",dis)
-    
-
-
     circle.Point.append([next_x,next_y])
 
 def Circle_touch_Agents(period, circle, agent):
@@ -109,26 +109,37 @@ def Circle_touch_Agents(period, circle, agent):
     Touch_dis = 1
     
     # fast check for touch
-    
+
     #if((circle.Point[period][0]-agent.Point[0])>Touch_dis 
     #   or (agent.Point[0]-circle.Point[period][0])>Touch_dis
     #   or (circle.Point[period][1]-agent.Point[1])>Touch_dis
     #   or (agent.Point[1]-circle.Point[period][1])>Touch_dis):
     #    agent.C[period] = agent.C[period-1]
-        
+
     #    return agent.C
  
-   # if((circle.Point[0][1]-agent.Point[1])>2):
+    #if((circle.Point[0][1]-agent.Point[1])>2):
     #    agent.C[period] = agent.C[period-1]
     #    return agent.C
 
+    if agent.C[period] == -1: # first assign
+        agent.C[period] = agent.C[period-1]
+
+    if (circle.Point[period][0] > agent.Point[0]) and ((circle.Point[period][0]-agent.Point[0]) > 1.3):
+        return agent.C
+    if (circle.Point[period][0] < agent.Point[0]) and ((agent.Point[0] - circle.Point[period][0]) > 1.3):
+        return agent.C
+
+    if ((circle.Point[period][1] > agent.Point[1])) and ((circle.Point[period][1]-agent.Point[1]) > 1.3):
+        return agent.C
+    if ((circle.Point[period][1] < agent.Point[1])) and ((agent.Point[1] - circle.Point[period][1]) > 1.3):
+        return agent.C
     dis = ((circle.Point[period][0]-agent.Point[0])**2+(circle.Point[period][1]-agent.Point[1])**2)**(0.5)
     #print("dis=",round(dis,2))
     
     #if circle.Num == 0: # fist time assign to period    
     #   agent.C[period] = agent.C[period-1]
-    if agent.C[period] == -1: # first assign
-        agent.C[period] = agent.C[period-1]
+    
     #print("period",period)
     #print(agent.C[period-1] ,agent.C[period] )
     
@@ -204,8 +215,9 @@ if __name__ == '__main__':
     Agents = []
     Circles = []
     print("hello Talent vs Luck")
-    
+
     start = time.time()
+
     for i in range (int(LUCKY_BALL_NUM/2)):
         #Lucky points
         Circles.append(Circle(i, 0x2, ran_num(BOUNDARY_X_Y), ran_num(BOUNDARY_X_Y)))
@@ -232,7 +244,6 @@ if __name__ == '__main__':
     #Circle_touch_Agents(1, Circles[0], Agents[0])
     #Circle_touch_Agents(2, Circles[0], Agents[0])
 
-
     for k in range(1,PERIOD+1):
          #print("Period: ",k)   
          for i in range(LUCKY_BALL_NUM):
@@ -245,7 +256,7 @@ if __name__ == '__main__':
      #    print(row)
     #for i in range (AGENT_NUM):
     #    print(Agents[i].Point)
-    
+
     scatter_lucky_x = []
     scatter_lucky_y = []
     scatter_unlucky_x = []
@@ -263,7 +274,7 @@ if __name__ == '__main__':
                
     #for row in Circle[0]:
     #    print(row)
-    
+
     plt.figure(figsize=(10, 10), dpi=100)
     scatter_agent_x = []
     scatter_agent_y = []
@@ -271,7 +282,6 @@ if __name__ == '__main__':
     for i in range (AGENT_NUM):
         scatter_agent_x.append(Agents[i].Point[0])
         scatter_agent_y.append(Agents[i].Point[1])
-
 
     plt.scatter(scatter_agent_x, scatter_agent_y,s=20,c="black", alpha=0.7)
     plt.scatter(scatter_lucky_x, scatter_lucky_y,s=40,c="red", alpha=0.7)
@@ -291,8 +301,6 @@ if __name__ == '__main__':
     start = time.time()
     # 輸出結果
    
-    
-    
     rich_man_cnt = 0
     rich_man_id = []
     talent_man_id = []
@@ -323,24 +331,23 @@ if __name__ == '__main__':
     file_path_create = "../Data/" + file_name +"-plot_2.png"
     plt.savefig(file_path_create)
     print("Rich Man cnt:",rich_man_cnt)
-    
-    #file_name = time.strftime("%Y-%m%d-%H%M%S")
-    
+
     for i in range(len(Agents)):
         for j in range(len(Agents[i].TouchPoint), 40):
             Agents[i].TouchPoint.append([-1,-1,-1,-1])
 
-    file_path_create = "../Data/" + file_name +".json"
+    file_path_create = "../Data/" + file_name +"_Agents.json"
+
     with open(file_path_create, 'w') as f:
-        #for i in range(len(rich_man_id)):
-        #    print(Agents[rich_man_id[i]], file=f)
-        #    print()
         print("[",end="",file=f)
         for i in range(len(Agents)):
             print(Agents[i], file=f)
-       #     print(Agents[i].Outoput(), file=f)
-            #print()
-            #print(Circles)
+
+    file_path_create = "../Data/" + file_name +"_Lucks.json"
+    with open(file_path_create, 'w') as f:
+        print("[",end="",file=f)
+        for i in range(len(Circles)):
+            print(Circles[i], file=f)
+
     end = time.time()
     print("Output exection time：%f sec "% (end - start))
-            

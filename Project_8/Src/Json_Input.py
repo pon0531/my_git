@@ -106,12 +106,7 @@ try:
         print(path)
         with open(path, 'r') as f:
             df = pd.read_json(f)
-            #print(df["Agent_Ind"][4])
-            print("len=",len(df))
-            print("touhPoint",type(df["TouchPoint"][5][0]))
-          
 
-             
         for j in range(len(df)):
             sql = """INSERT INTO {IMG} (Agent_Ind, T, Point_x, Point_y,
                                         C0,
