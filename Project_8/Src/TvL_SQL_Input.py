@@ -17,57 +17,42 @@ import pandas as pd
 import time
 import os
 
-database_name = "Tvl_v3"
-basic_file_paths = []
-data_base_table_names = []
+def Json_input(database_name, data_base_table_name):
 
-dirPath = r'../Data'
-print(os.listdir(dirPath))
-Files = [f for f in os.listdir(dirPath)]
-
-for file_name in Files:
-    if '.json' in file_name:
-        file_path_create = "../Data/" + file_name
-        basic_file_paths.append(file_path_create)
-
-        file_name = file_name.replace(".json","")
-        data_base_table_names.append(file_name)
-
-try:
-    # 開啟資料庫連接
-    conn = MySQLdb.connect(host="localhost",    # 主機名稱
-                            user="root",         # 帳號
-                            password="boopann403", # 密碼
-                            #database = "test_db",  #資料庫
-                            port=3306)           # port
+    try:
+        # 開啟資料庫連接
+        conn = MySQLdb.connect(host="localhost",    # 主機名稱
+                                user="root",         # 帳號
+                                password="boopann403", # 密碼
+                                #database = "test_db",  #資料庫
+                                port=3306)           # port
+        
+        # 使用cursor()方法操作資料庫
+        cursor = conn.cursor()
+        
+        # 建立資料庫test_db
+        sql = "Select @@version"
     
-    # 使用cursor()方法操作資料庫
-    cursor = conn.cursor()
+        cursor.execute(sql)
+        db_info = cursor.fetchone()
+        print(db_info)
     
-    # 建立資料庫test_db
-    sql = "Select @@version"
+        sql = """CREATE DATABASE IF NOT EXISTS `{IMG}`""".format(IMG=database_name)
+        cursor.execute(sql)
+        conn.close()
+    
+        print("Create database :",database_name)
+    
+        # 創造test_db後，再次connection
+    
+        conn = MySQLdb.connect(host="localhost",    # 主機名稱
+                                user="root",         # 帳號
+                                password="boopann403", # 密碼
+                                database = database_name,  #資料庫
+                                port=3306)           # port
+        cursor = conn.cursor()
+    
 
-    cursor.execute(sql)
-    db_info = cursor.fetchone()
-    print(db_info)
-
-    sql = """CREATE DATABASE IF NOT EXISTS `{IMG}`""".format(IMG=database_name)
-    cursor.execute(sql)
-    conn.close()
-
-    print("Create database :",database_name)
-
-    # 創造test_db後，再次connection
-
-    conn = MySQLdb.connect(host="localhost",    # 主機名稱
-                            user="root",         # 帳號
-                            password="boopann403", # 密碼
-                            database = "tvl_v3",  #資料庫
-                            port=3306)           # port
-    cursor = conn.cursor()
-
-    print(len(data_base_table_names))
-    for i in range(len(data_base_table_names)):
         start_time_ = time.time()
         sql = """CREATE TABLE IF NOT EXISTS {IMG} (Agent_Ind INT(10),
                                                 T FLOAT(5),
@@ -92,20 +77,41 @@ try:
                                               E51 FLOAT(15),E52 FLOAT(15),E53 FLOAT(15),E54 FLOAT(15),E55 FLOAT(15),E56 FLOAT(15),E57 FLOAT(15),E58 FLOAT(15),E59 FLOAT(15),E60 FLOAT(15),
                                               E61 FLOAT(15),E62 FLOAT(15),E63 FLOAT(15),E64 FLOAT(15),E65 FLOAT(15),E66 FLOAT(15),E67 FLOAT(15),E68 FLOAT(15),E69 FLOAT(15),E70 FLOAT(15),
                                               E71 FLOAT(15),E72 FLOAT(15),E73 FLOAT(15),E74 FLOAT(15),E75 FLOAT(15),E76 FLOAT(15),E77 FLOAT(15),E78 FLOAT(15),E79 FLOAT(15),
-                                              E80 FLOAT(15),
+                                              E80 FLOAT(15),LUCKY FLOAT(15),UNLUCKY FLOAT(15),
                                               TP0 TEXT(30),
                                               TP1 TEXT(30),TP2 TEXT(30),TP3 TEXT(30),TP4 TEXT(30),TP5 TEXT(30),TP6 TEXT(30),TP7 TEXT(30),TP8 TEXT(30),TP9 TEXT(30),TP10 TEXT(30),
                                               TP11 TEXT(30),TP12 TEXT(30),TP13 TEXT(30),TP14 TEXT(30),TP15 TEXT(30),TP16 TEXT(30),TP17 TEXT(30),TP18 TEXT(30),TP19 TEXT(30),TP20 TEXT(30),
                                               TP21 TEXT(30),TP22 TEXT(30),TP23 TEXT(30),TP24 TEXT(30),TP25 TEXT(30),TP26 TEXT(30),TP27 TEXT(30),TP28 TEXT(30),TP29 TEXT(30),TP30 TEXT(30),
-                                              TP31 TEXT(30),TP32 TEXT(30),TP33 TEXT(30),TP34 TEXT(30),TP35 TEXT(30),TP36 TEXT(30),TP37 TEXT(30),TP38 TEXT(30),TP39 TEXT(30))""".format(IMG=data_base_table_names[i])
-        print("Input database table:",data_base_table_names[i])
+                                              TP31 TEXT(30),TP32 TEXT(30),TP33 TEXT(30),TP34 TEXT(30),TP35 TEXT(30),TP36 TEXT(30),TP37 TEXT(30),TP38 TEXT(30),TP39 TEXT(30))""".format(IMG=data_base_table_name)
+        print("Input database table:",data_base_table_name)
         #print("SQL cmd: %s" %sql)
         cursor.execute(sql)
-        print(basic_file_paths)
-        path = "../Data/"+data_base_table_names[i]+".json"
+
+        path = "../Data/"+data_base_table_name+".json"
         print(path)
+        lucky_list =[]
+        unlucky_list=[]     
+
         with open(path, 'r') as f:
             df = pd.read_json(f)
+
+        # cal lucky and unlucky cnt
+        for k in range(len(df)):
+            lucky = 0
+            unlucky = 0
+            #print("k=",k)
+            #print(k,end=",",sep="")
+            for s in range(len(df["Event"][k])):
+                #print("s=",s)
+                #print(df["Event"][k][i])
+                
+                if (df["Event"][k][s] == 2) or (df["Event"][k][s] == 3)  or (df["Event"][k][s] == 4)  or (df["Event"][k][s] == 5):
+                    lucky = lucky + 1
+                
+                if df["Event"][k][s] == 1  or df["Event"][k][s] == 3  or df["Event"][k][s] == 5:
+                    unlucky = unlucky + 1
+            lucky_list.append(lucky)
+            unlucky_list.append(unlucky)
 
         for j in range(len(df)):
             sql = """INSERT INTO {IMG} (Agent_Ind, T, Point_x, Point_y,
@@ -127,6 +133,7 @@ try:
                                         E51,E52,E53,E54,E55,E56,E57,E58,E59,E60,
                                         E61,E62,E63,E64,E65,E66,E67,E68,E69,E70,
                                         E71,E72,E73,E74,E75,E76,E77,E78,E79,E80,
+                                        LUCKY,UNLUCKY,
                                         TP0,
                                         TP1,TP2,TP3,TP4,TP5,TP6,TP7,TP8,TP9,TP10,
                                         TP11,TP12,TP13,TP14,TP15,TP16,TP17,TP18,TP19,TP20,
@@ -152,7 +159,7 @@ try:
                                                %s, %s, %s, %s, %s, %s,%s ,%s,%s,%s,
                                                %s, %s, %s, %s, %s, %s,%s ,%s,%s,%s,
                                                %s, %s, %s, %s, %s, %s,%s ,%s,%s,%s,
-                                               %s, %s, %s, %s, %s, %s)""".format(IMG=data_base_table_names[i])
+                                               %s, %s, %s, %s, %s, %s,%s,%s)""".format(IMG=data_base_table_name)
             
             var = (df["Agent_Ind"][j],
                    df["T"][j],
@@ -176,6 +183,7 @@ try:
                    df["Event"][j][51],df["Event"][j][52],df["Event"][j][53],df["Event"][j][54],df["Event"][j][55],df["Event"][j][56],df["Event"][j][57],df["Event"][j][58],df["Event"][j][59],df["Event"][j][60],
                    df["Event"][j][61],df["Event"][j][62],df["Event"][j][63],df["Event"][j][64],df["Event"][j][65],df["Event"][j][66],df["Event"][j][67],df["Event"][j][68],df["Event"][j][69],df["Event"][j][70],
                    df["Event"][j][71],df["Event"][j][72],df["Event"][j][73],df["Event"][j][74],df["Event"][j][75],df["Event"][j][76],df["Event"][j][77],df["Event"][j][78],df["Event"][j][79],df["Event"][j][80],
+                   lucky_list[j],unlucky_list[j],
                    str(df["TouchPoint"][j][0]),
                    str(df["TouchPoint"][j][1]),str(df["TouchPoint"][j][2]),str(df["TouchPoint"][j][3]),str(df["TouchPoint"][j][4]),str(df["TouchPoint"][j][5]),str(df["TouchPoint"][j][6]),str(df["TouchPoint"][j][7]),str(df["TouchPoint"][j][8]),str(df["TouchPoint"][j][9]),str(df["TouchPoint"][j][10]),
                    str(df["TouchPoint"][j][11]),str(df["TouchPoint"][j][12]),str(df["TouchPoint"][j][13]),str(df["TouchPoint"][j][14]),str(df["TouchPoint"][j][15]),str(df["TouchPoint"][j][16]),str(df["TouchPoint"][j][17]),str(df["TouchPoint"][j][18]),str(df["TouchPoint"][j][19]),str(df["TouchPoint"][j][20]),
@@ -184,13 +192,15 @@ try:
             cursor.execute(sql, var)
             conn.commit()
 
-
         end_time_ = time.time()
-        print("Time elapsed for input %s: %.2f seconds" %(data_base_table_names[i],(end_time_ - start_time_)))
-    
-except Exception as e :
-    print("資料庫連接失敗", e)
+        print("Time elapsed for input %s: %.2f seconds" %(data_base_table_name,(end_time_ - start_time_)))
 
-finally:
-    conn.close()
-    print("資料庫連線結束")
+    except Exception as e :
+        print("資料庫連接失敗", e)
+    
+    finally:
+        conn.close()
+        print("資料庫連線結束")
+        
+#if __name__ == '__main__':
+#    Json_input()
