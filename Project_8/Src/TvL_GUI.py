@@ -18,11 +18,25 @@ import time
 from PIL import ImageTk, Image
 from TvL_Model import TvL_model
 from TvL_SQL_Input import Json_input
+from enum import Enum
+import threading
 
-
-global_database = "tvl_v4"
+class List_item:
+    LIST_ITEM_RICH_TOP = 0
+    LIST_ITEM_LUCKY_TOP = 1
+    LIST_ITEM_UNLUCKY_TOP = 2
+    LIST_ITEM_TALENT_TOP = 3
+    LIST_ITEM_TALENT_BOTTOM=4
+    LIST_ITEM_TALENT_HIST = 5
+    LIST_ITEM_CAPTIAL_20_80 = 6
+    LIST_ITEM_CAPTIAL_LUCKY = 7
+    LIST_ITEM_CAPTIAL_UNLUCKY = 8
+    LIST_ITEM_LUCKY_CNT = 9
+    LIST_ITEM_UNLUCKY_CNT = 10
+    LIST_ITEM_ALL_RUN_TOP = 11
+    
+global_database = "tvl_v9"
 class Button_TvL:
-    lobal_Test_Cnt = 0
     
     def __init__(self, root, no, h, w, texts, layer, file_name):
         self.no = no
@@ -31,7 +45,7 @@ class Button_TvL:
         self.root = root     
         self.pic_file_path = ""
 
-        if layer == 0: # start model button
+        if layer == 0:
             self.btn = tk.Button(root,
                                text=texts,
                                font=('Arial',10,'bold'),
@@ -42,7 +56,7 @@ class Button_TvL:
                                image = file_name,
                                command=lambda: self.btn_cb_start_model(no, texts,file_name));
             self.btn.pack()
-        elif layer == 1: # table button
+        elif layer == 1:
             self.btn = tk.Button(root,
                                #text=self.Global_Test_Cnt,
                                activebackground='red',
@@ -52,26 +66,16 @@ class Button_TvL:
                                height= h, width=w,
                                bd=0,bg='black',
                                image = no,
-                               command=lambda: self.btn_cb_fun(no, texts,file_name));
+                               command=lambda: self.btn_cb_analysis_list(no, texts,file_name));
             self.btn.pack(side='left')
-        elif layer == 5: # table button
-            self.btn = tk.Button(root,
-                               #text=self.Global_Test_Cnt,
-                               activebackground='red',
-                               activeforeground='white',
-                               padx=2,pady=2,
-                               font=('Arial',10,'bold'),
-                               height= h, width=w,
-                               bd=5,bg='red',
-                               command=lambda: self.btn_cb_fun(no, texts,file_name));
-            self.btn.pack()
         elif layer == 2:
             self.btn = tk.Button(root,
                                text=texts,
                                activebackground='red',
+                               activeforeground='white',
                                font=('Arial',10,'bold'),
                                height= h, width=w,
-                               command=lambda: self.btn_cb_fun2(no, texts,file_name));
+                               command=lambda: self.btn_cb_table_list(no, texts,file_name));
             self.btn.pack()
         elif layer == 3:
             self.btn = tk.Button(root,
@@ -81,22 +85,12 @@ class Button_TvL:
                                font=('Arial',10,'bold'),
                                height= h, width=w,
                                bd=4,bg='red',
-                               command=lambda: self.Analysis_1(no, texts,file_name));
+                               command=lambda: self.btn_cb_bar_chart_list(no, texts,file_name));
             self.btn.grid(row=0,column=no,sticky=tk.S+tk.W)
-        elif layer == 4:
-            self.btn = tk.Button(root,
-                               text=texts,
-                               activebackground='red',
-                               activeforeground='white',
-                               font=('Arial',10,'bold'),
-                               height= h, width=w,
-                               bd=40,bg='red',
-                               command=lambda: self.Analysis_2(no, texts,file_name));
-            #self.btn.grid(row=0,column=no,sticky=tk.S+tk.W)
 
-    def btn_cb_start_model(self, no, texts,file_name):
+    def model_running(self,texts):
 
-        print("start model")
+        print("start model background")
 
         # get cnt from label input
         exe_cnt = int(texts.get())
@@ -105,21 +99,33 @@ class Button_TvL:
         resized_img = img.resize((30,30), Image.ANTIALIAS)
         img_obj_life = ImageTk.PhotoImage(resized_img)  
 
+        #create_new_database_table = []
+
         for i in range(exe_cnt):
             
             # Model create new data
             create_new_database_table = TvL_model()
+            
+        #for i in range(exe_cnt):
             
             # SQL input data to SQL database
             Json_input(global_database,create_new_database_table)
             
             # Create new botton
             Button_TvL(root, img_obj_life,30,30, create_new_database_table,1,create_new_database_table)
-        
-    def btn_cb_fun(self, no, texts,file_name):
-        print(no)
-        print("func",texts)
-        print("func",self.file_name)
+
+    def btn_cb_start_model(self, no, texts,file_name):
+
+        print("start model")
+
+        #t = threading.Thread(target=model_running,args=(create_new_database_table,exe_cnt,))
+        #t = threading.Thread(target=model_running)
+        #t = threading.Thread(target=model_running,args=(texts,file_name,))
+        t = threading.Thread(target=self.model_running,args=(texts,))
+        t.start()
+    def btn_cb_analysis_list(self, no, texts,file_name):
+        print("btn_cb_analysis_list")
+
         root = tk.Tk()
         root.title("分析圖列表")
         root.geometry('300x600')
@@ -133,7 +139,11 @@ class Button_TvL:
         buttons.append(Button_TvL(root, 6, 1,25,"20/80 財產分布圖",2,file_name))
         buttons.append(Button_TvL(root, 7, 1,25,"Lucky & C分佈",2,file_name))
         buttons.append(Button_TvL(root, 8, 1,25,"Unlucky & C分佈",2,file_name))
-        
+        buttons.append(Button_TvL(root, 9, 1,25,"Lucky Event 分佈",2,file_name))
+        buttons.append(Button_TvL(root, 10, 1,25,"Unlucky Event 分佈",2,file_name))
+        buttons.append(Button_TvL(root, 11, 1,25,"All Run Tops",2,file_name))
+    
+    
     def open_pic_thread(self):
         
         print(self.pic_file_path)
@@ -143,10 +153,10 @@ class Button_TvL:
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    def Analysis_1(self, no, texts,file_name):
+    def btn_cb_bar_chart_list(self, no, texts,file_name):
         
-        print("Analysis_1",texts)
-        print("Analysis_1 no",no)
+        print("btn_cb_bar_chart_list")
+
         conn = MySQLdb.connect(host="localhost",    # 主機名稱
                             user="root",         # 帳號
                             password="boopann403", # 密碼
@@ -251,7 +261,6 @@ class Button_TvL:
                 direction='inout',
                 colors='red')
 
-            
         plt.plot(x, y1_re_gen, color=color)
 
         plt.xticks(ticks=[])
@@ -271,10 +280,9 @@ class Button_TvL:
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    def btn_cb_fun2(self, no, texts,file_name):
-        print(no)
-        print("func2",texts)
-        print("func2",self.file_name)
+    def btn_cb_table_list(self, no, texts,file_name):
+
+        print("btn_cb_table_list")
 
         # 開啟資料庫連接
         conn = MySQLdb.connect(host="localhost",    # 主機名稱
@@ -286,8 +294,7 @@ class Button_TvL:
         # 使用cursor()方法操作資料庫
         cursor = conn.cursor()
 
-
-        if no == 0:
+        if no == List_item.LIST_ITEM_RICH_TOP:
             print("Rich list")
             buttons_lucky_list = []
             buttons_unlucky_list = []
@@ -304,18 +311,14 @@ class Button_TvL:
             db_info = cursor.fetchall()
             
             for i,row in enumerate(db_info):
-                print(row)
-                ##print(row[0])
-                print("path = ",file_name)
-
                 if row[1] == 0:
                     buttons_unlucky_list.append(Button_TvL(root, i, int(row[1]), 2,row[0], 3,self.file_name))
                 else:
                     buttons_unlucky_list.append(Button_TvL(root, i, int(math.log(row[1])), 2,row[0], 3,self.file_name))
                 
             conn.close()
-    
-        if no == 1:
+
+        if no == List_item.LIST_ITEM_LUCKY_TOP:
             print("Lucky list")
             buttons_unlucky_list = []
             
@@ -331,11 +334,6 @@ class Button_TvL:
             db_info = cursor.fetchall()
             
             for i,row in enumerate(db_info):
-                print(row)
-                print(row[0])
-                print(row[1])
-                #print("path = ",file_name)
-                
                 if row[1] == 0:
                     buttons_unlucky_list.append(Button_TvL(root, i, int(row[1]), 2,row[0], 3,self.file_name))
                 else:
@@ -343,7 +341,7 @@ class Button_TvL:
 
             conn.close()
 
-        if no == 2:
+        if no == List_item.LIST_ITEM_UNLUCKY_TOP:
             print("Unlucky list")
             buttons_unlucky_list = []
             
@@ -359,11 +357,6 @@ class Button_TvL:
             db_info = cursor.fetchall()
             
             for i,row in enumerate(db_info):
-                print(row)
-                print(row[0])
-                print(row[1])
-                #print("path = ",file_name)
-                
                 if row[1] == 0:
                     buttons_unlucky_list.append(Button_TvL(root, i, 5+int(row[1]), 2,row[0], 3,self.file_name))
                 else:
@@ -371,7 +364,7 @@ class Button_TvL:
 
             conn.close()
         
-        if no == 3:
+        if no == List_item.LIST_ITEM_TALENT_TOP:
             print("Talent top list")
             buttons_unlucky_list = []
             
@@ -385,7 +378,7 @@ class Button_TvL:
                         LIMIT 30""".format(IMG=file_name)
             result = cursor.execute(sql)
             db_info = cursor.fetchall()
-            print(db_info)
+
             for i,row in enumerate(db_info):
                 if row[1] == 0:
                     buttons_unlucky_list.append(Button_TvL(root, i, int(row[1]), 2,row[0], 3,self.file_name))
@@ -393,7 +386,7 @@ class Button_TvL:
                     buttons_unlucky_list.append(Button_TvL(root, i, int(math.log(row[1])), 2,row[0], 3,self.file_name))
 
             conn.close()
-        if no == 4:
+        if no == List_item.LIST_ITEM_TALENT_BOTTOM:
             print("Talent bottom list")
             buttons_unlucky_list = []
             
@@ -407,14 +400,14 @@ class Button_TvL:
                         LIMIT 30""".format(IMG=file_name)
             result = cursor.execute(sql)
             db_info = cursor.fetchall()
-            print(db_info)
+
             for i,row in enumerate(db_info):
                 if row[1] == 0:
                     buttons_unlucky_list.append(Button_TvL(root, i, int(row[1]), 2,row[0], 3,self.file_name))
                 else:
                     buttons_unlucky_list.append(Button_TvL(root, i, int(math.log(row[1])), 2,row[0], 3,self.file_name))
             conn.close()
-        if no == 5:
+        if no == List_item.LIST_ITEM_TALENT_HIST:
             print("Talent hist")
 
             sql = """SELECT T
@@ -428,7 +421,6 @@ class Button_TvL:
                 Agents_T.append(row[0])
 
             file_path_create = "../Data/" + file_name +"_plot_2_Talent_list.png"
-            print(file_path_create)
             
             plt.figure(figsize=(12, 8), dpi=70)
             plt.hist(Agents_T, bins = 100)
@@ -444,7 +436,7 @@ class Button_TvL:
             
             conn.close()
             
-        if no == 6:
+        if no == List_item.LIST_ITEM_CAPTIAL_20_80:
             print("Property 20/80")
             buttons_unlucky_list = []
 
@@ -456,12 +448,11 @@ class Button_TvL:
             C80_all = []
 
             for i,row in enumerate(db_info):
-                print(row[0])
                 C80_all.append(row[0])
 
             sum_20 = 0
             sum_all = 0
-            print(C80_all)
+
             for i in range(len(C80_all)):
                 if i > 20:
                     sum_20  = C80_all[i] + sum_20
@@ -491,7 +482,7 @@ class Button_TvL:
             
             conn.close()
 
-        if no == 7:
+        if no == List_item.LIST_ITEM_CAPTIAL_LUCKY:
             print("Lucky & C")
             buttons_unlucky_list = []
 
@@ -505,7 +496,6 @@ class Button_TvL:
             Lucky_cnt_list = []
 
             for i,row in enumerate(db_info):
-                print(row[0])
                 if row[0] == 0:
                     C80_all.append(0)
                 else:
@@ -529,7 +519,7 @@ class Button_TvL:
             cv2.destroyAllWindows()
 
             conn.close()
-        if no == 8:
+        if no == List_item.LIST_ITEM_CAPTIAL_UNLUCKY:
             print("Unlucky & C")
             buttons_unlucky_list = []
 
@@ -543,7 +533,6 @@ class Button_TvL:
             Lucky_cnt_list = []
 
             for i,row in enumerate(db_info):
-                print(row[0])
                 if row[0] == 0:
                     C80_all.append(0)
                 else:
@@ -567,13 +556,184 @@ class Button_TvL:
             cv2.destroyAllWindows()
             
             conn.close()            
+
+        if no == List_item.LIST_ITEM_LUCKY_CNT:
+            print("Lucky Event Analysis")
+            buttons_unlucky_list = []
+
+            sql = """SELECT LUCKY
+                        FROM {IMG}
+                        ORDER BY LUCKY DESC""".format(IMG=file_name)
+            result = cursor.execute(sql)
+            db_info = cursor.fetchall()
             
+            Lucky_cnt = {}
+            Lucky_cnt_t = []
+            for i,row in enumerate(db_info):
+                print(i)
+                Lucky_cnt_t.append(row[0])
+
+            print("Lucky_cnt=",Lucky_cnt)
+            print("len of Lucky cnt = ",len(Lucky_cnt_t))
+            for i in range(len(Lucky_cnt_t)):
+                Lucky_cnt[Lucky_cnt_t[i]] = Lucky_cnt_t.count(Lucky_cnt_t[i])
+            
+            print(Lucky_cnt)
+            print("sum = ",sum(Lucky_cnt.values()))
+            
+            re_gen_y = []
+            print("len lucky cnt key",(len(Lucky_cnt.keys())))
+            print("len lucky cnt value",(len(Lucky_cnt.values())))
+            for row in (Lucky_cnt.keys()):
+                print("row = ",row)
+                print(Lucky_cnt[row])
+                if Lucky_cnt[row] == 0:
+                    re_gen_y.append(0)
+                else:
+                    re_gen_y.append(math.log((Lucky_cnt[row])))
+            
+            print("reverse",re_gen_y)
+            
+            print("keys",Lucky_cnt.keys())
+            plt.bar(Lucky_cnt.keys(),re_gen_y)
+
+            file_path_create = "../Data/" + file_name +"-plot_3.png"
+            plt.savefig(file_path_create)
+
+            img = cv2.imread(file_path_create)
+            cv2.imshow(file_path_create, img)
+
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+                        
+            conn.close()   
+
+        if no == List_item.LIST_ITEM_UNLUCKY_CNT:
+            print("Lucky Event Analysis")
+            buttons_unlucky_list = []
+
+            sql = """SELECT UNLUCKY
+                        FROM {IMG}
+                        ORDER BY LUCKY DESC""".format(IMG=file_name)
+            result = cursor.execute(sql)
+            db_info = cursor.fetchall()
+            
+            Lucky_cnt = {}
+            Lucky_cnt_t = []
+            for i,row in enumerate(db_info):
+                print(i)
+                Lucky_cnt_t.append(row[0])
+
+            print("Lucky_cnt=",Lucky_cnt)
+            print("len of Lucky cnt = ",len(Lucky_cnt_t))
+            for i in range(len(Lucky_cnt_t)):
+                Lucky_cnt[Lucky_cnt_t[i]] = Lucky_cnt_t.count(Lucky_cnt_t[i])
+            
+            print(Lucky_cnt)
+            print("sum = ",sum(Lucky_cnt.values()))
+            
+            re_gen_y = []
+            print("len lucky cnt key",(len(Lucky_cnt.keys())))
+            print("len lucky cnt value",(len(Lucky_cnt.values())))
+            for row in (Lucky_cnt.keys()):
+                print("row = ",row)
+                print(Lucky_cnt[row])
+                if Lucky_cnt[row] == 0:
+                    re_gen_y.append(0)
+                else:
+                    re_gen_y.append(math.log((Lucky_cnt[row])))
+            
+            print("reverse",re_gen_y)
+            
+            print("keys",Lucky_cnt.keys())
+            plt.bar(Lucky_cnt.keys(),re_gen_y)
+
+            file_path_create = "../Data/" + file_name +"-plot_3.png"
+            plt.savefig(file_path_create)
+
+            img = cv2.imread(file_path_create)
+            cv2.imshow(file_path_create, img)
+
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+                        
+            conn.close()               
+
+        if no == List_item.LIST_ITEM_ALL_RUN_TOP:
+            print("Lucky Event Analysis")
+            buttons_unlucky_list = []
+
+            
+            root = tk.Tk()
+            root.title(file_name)
+            root.geometry('900x300')
+    
+
+            # 使用cursor()方法操作資料庫
+            cursor = conn.cursor()
+        
+            sql = """SHOW TABLES
+                    FROM {IMG}""".format(IMG=global_database)
+            result = cursor.execute(sql)
+            db_info = cursor.fetchall()
+
+            data_base_table_names = []
+            
+
+            for i,row in enumerate(db_info):
+                data_base_table_names.append(row[0])
+
+            print(data_base_table_names)
+            
+            Top_Agents = []
+            for i,row in enumerate(data_base_table_names):
+                print(row)
+                sql = """SELECT Agent_Ind,C80
+                        FROM {IMG} 
+                        WHERE C80 =  (SELECT MAX(C80) 
+    			                      	FROM {IMG})""".format(IMG=row)
+        
+                result = cursor.execute(sql)
+                Top_Agent = cursor.fetchall()
+                #Top_Agents.append(Top_Agent+data_base_table_names)
+                #Top_Agent[0].append(data_base_table_names)
+                
+                #Top_Agents[row] = (Top_Agent[0][1],Top_Agent[0][0])
+                
+               #Top_Agents[Top_Agent[0][1]] = (row,Top_Agent[0][0])
+                Top_Agents.append([row,Top_Agent[0][1],Top_Agent[0][0]])
+
+            print("Top Agents",Top_Agents)
+            Sorted_Agents = sorted(Top_Agents, key = lambda x : x[1], reverse=True)
+
+            #Sorted_Agents = Top_Agents.sort(key=2)
+            print("Sorted_Agents",Sorted_Agents)
+            
+            print("Sorted_Agents0",Sorted_Agents[0])
+            print("Sorted_Agents000",Sorted_Agents[0][0])
+            print("Sorted_Agents001",Sorted_Agents[0][1])
+            print("Sorted_Agents002",Sorted_Agents[0][2])
+            
+            for i in range (len(Sorted_Agents)):
+                if int(Sorted_Agents[i][1]) == 0:
+                    buttons_unlucky_list.append(Button_TvL(root, i, Sorted_Agents[i][1], 2,Sorted_Agents[i][2], 3, Sorted_Agents[i][0]))
+                else:
+                    buttons_unlucky_list.append(Button_TvL(root, i, int(math.log(Sorted_Agents[i][1])), 2,Sorted_Agents[i][2], 3, Sorted_Agents[i][0]))
+
+            
+                #print(Sorted_Agents[0][1][2])
+            #print(Top_Agents.keys())
+            #print(Top_Agents.values())
+            
+            conn.close()
+                    
+        plt.clf()
+            
+                     
     def __repr__(self):
         #return "{"+f"\"no\":{self.no},\"btn\":{self.btn},\"fun\":{self.fun}"+"}]"
         return self.text
 
-
- 
 if __name__ == '__main__':
 
     # 開啟資料庫連接
@@ -629,7 +789,7 @@ if __name__ == '__main__':
     img = Image.open("ig-nobel-prize-2022.png")
     resized_img = img.resize((400,169), Image.ANTIALIAS)
     img_obj2 = ImageTk.PhotoImage(resized_img)
-    
+
     img = Image.open("start.jpg")
     resized_img = img.resize((400,169), Image.ANTIALIAS)
     img_obj3 = ImageTk.PhotoImage(resized_img)   
@@ -637,7 +797,7 @@ if __name__ == '__main__':
     # 設定 Label
     exe_cnt_msg = tk.Label(root, text="TvL Model Execution Count", foreground="red", padx=0, pady=0)
     exe_cnt_msg.pack()
-    
+
     # 設定 Entry
     exe_cnt_msg = tk.Entry(root, foreground="green", textvariable=exe_cnt_msg)
     exe_cnt_msg.pack() 
@@ -645,11 +805,11 @@ if __name__ == '__main__':
     Button_TvL(root, 0,160,400, exe_cnt_msg,0, img_obj3)
     Button_TvL(root, 0,160,400, exe_cnt_msg,0, img_obj)
     Button_TvL(root, 0,166,400, exe_cnt_msg,0, img_obj2)    
-    
+
     img = Image.open("life.jpg")
     resized_img = img.resize((30,30), Image.ANTIALIAS)
     img_obj_life = ImageTk.PhotoImage(resized_img)   
-     
+
     for i in range(len(data_base_table_names)-1,-1,-1):
         buttons.append(Button_TvL(root, img_obj_life,30,30, data_base_table_names[i],1,data_base_table_names[i]))
 

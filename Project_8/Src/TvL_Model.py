@@ -43,7 +43,7 @@ class Agent:
         return test
     
 # define Luck class
-class Circle:
+class Luck:
     def __init__(self, ind, Event, Axis_x, Axis_y):
         self.Event = Event
         self.Point = [[Axis_x,Axis_y]]
@@ -69,7 +69,7 @@ def ran_num(max):
     return round(random.uniform(0, max), 2)
 
 
-def Circle_move(period, circle):
+def Luckys_move(period, circle):
 
     lucky_circle_r = 2
 
@@ -101,7 +101,7 @@ def Circle_move(period, circle):
     dis = ((next_x - circle.Point[period-1][0])**2 + (next_y- circle.Point[period-1][1])**2)**(0.5)
     circle.Point.append([next_x,next_y])
 
-def Circle_touch_Agents(period, circle, agent):
+def Intersection_Lucks_Agents(period, circle, agent):
     
     Touch_dis = 1
 
@@ -148,16 +148,16 @@ def Circle_touch_Agents(period, circle, agent):
 def TvL_model(): 
     C_init = 10
     Agents = []
-    Circles = []
+    Lucks = []
     print("hello Talent vs Luck")
 
     start = time.time()
 
     for i in range (int(LUCKY_BALL_NUM/2)):
         #Lucky points
-        Circles.append(Circle(i, 0x2, ran_num(BOUNDARY_X_Y), ran_num(BOUNDARY_X_Y)))
+        Lucks.append(Luck(i, 0x2, ran_num(BOUNDARY_X_Y), ran_num(BOUNDARY_X_Y)))
         #Unlucky points
-        Circles.append(Circle(i, 0x1, ran_num(BOUNDARY_X_Y), ran_num(BOUNDARY_X_Y)))
+        Lucks.append(Luck(i, 0x1, ran_num(BOUNDARY_X_Y), ran_num(BOUNDARY_X_Y)))
 
     # init Agents
     Agents_T = Generate_T_by_para(AGENT_NUM,0.6,0.1)
@@ -167,7 +167,7 @@ def TvL_model():
 
     for i in range (1,PERIOD+1):
         for j in range(LUCKY_BALL_NUM):
-            Circle_move(i,Circles[j])
+            Luckys_move(i,Lucks[j])
 
     for k in range(1,PERIOD+1):
          #print("Period: ",k)   
@@ -175,7 +175,7 @@ def TvL_model():
              #print("Ball= ",i)
              for j in range(AGENT_NUM):
                 #print("Agent: ",j)   
-                Agents[j].C = Circle_touch_Agents(k, Circles[i], Agents[j])
+                Agents[j].C = Intersection_Lucks_Agents(k, Lucks[i], Agents[j])
 
     scatter_lucky_x = []
     scatter_lucky_y = []
@@ -185,12 +185,12 @@ def TvL_model():
         for period_t in range (PERIOD+1):
             #print(i)
             #print(Circles[lucky_bal_no].Point[period_t])
-            if Circles[lucky_bal_no].Event == 0x2:
-                scatter_lucky_x.append(Circles[lucky_bal_no].Point[period_t][0])
-                scatter_lucky_y.append(Circles[lucky_bal_no].Point[period_t][1])
+            if Lucks[lucky_bal_no].Event == 0x2:
+                scatter_lucky_x.append(Lucks[lucky_bal_no].Point[period_t][0])
+                scatter_lucky_y.append(Lucks[lucky_bal_no].Point[period_t][1])
             else:
-                scatter_unlucky_x.append(Circles[lucky_bal_no].Point[period_t][0])
-                scatter_unlucky_y.append(Circles[lucky_bal_no].Point[period_t][1])
+                scatter_unlucky_x.append(Lucks[lucky_bal_no].Point[period_t][0])
+                scatter_unlucky_y.append(Lucks[lucky_bal_no].Point[period_t][1])
 
     plt.figure(figsize=(10, 10), dpi=70)
     scatter_agent_x = []
@@ -199,9 +199,9 @@ def TvL_model():
     for i in range (AGENT_NUM):
         scatter_agent_x.append(Agents[i].Point[0])
         scatter_agent_y.append(Agents[i].Point[1])
-
-    plt.scatter(scatter_agent_x, scatter_agent_y,s=3,c="black", alpha=0.7)
-    plt.scatter(scatter_lucky_x, scatter_lucky_y,s=3,c="red", alpha=0.7)
+    #
+    plt.scatter(scatter_agent_x, scatter_agent_y,s=10,c="black", alpha=0.7)
+    plt.scatter(scatter_lucky_x, scatter_lucky_y,s=10,c="red", alpha=0.7)
     plt.scatter(scatter_unlucky_x, scatter_unlucky_y,s=2,c="green", alpha=0.7)
     
     file_name = time.strftime("%Y_%m%d_%H%M%S")

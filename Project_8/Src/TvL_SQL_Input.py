@@ -35,8 +35,7 @@ def Json_input(database_name, data_base_table_name):
     
         cursor.execute(sql)
         db_info = cursor.fetchone()
-        print(db_info)
-    
+
         sql = """CREATE DATABASE IF NOT EXISTS `{IMG}`""".format(IMG=database_name)
         cursor.execute(sql)
         conn.close()
@@ -197,7 +196,6 @@ def Json_input(database_name, data_base_table_name):
 
     except Exception as e :
         print("資料庫連接失敗", e)
-    
     finally:
         conn.close()
         print("資料庫連線結束")
